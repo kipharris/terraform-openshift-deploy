@@ -1,7 +1,7 @@
 #--------------------------------#
 #--------------------------------#
 locals {
-    gluster_storage_devices = "\"${var.storage["gluster_disk_device"]}\""
+    gluster_storage_devices = "\"${var.worker["gluster_disk_device"]}\""
 }
 
 # ansible inventory file
@@ -105,14 +105,15 @@ ${join("\n", formatlist("%v.%v",var.master_hostname, var.domain))}
 [etcd]
 ${join("\n", formatlist("%v.%v etcd_ip=%v",var.master_hostname, var.domain, var.master_private_ip))}
 
-${var.storage["nodes"] == "0" ? "" : "[glusterfs]"}
-${var.storage["nodes"] == "0" ? "" : "${join("\n", formatlist("%v.%v glusterfs_devices='[ %v ]' openshift_node_group_name='node-config-compute'", var.storage_hostname, var.domain, local.gluster_storage_devices))}"}
+[glusterfs]
+${join("\n", formatlist("%v.%v glusterfs_devices='[ %v ]'", var.app_hostname, var.domain, local.gluster_storage_devices))}
 
 [nodes]
 ${join("\n", formatlist("%v.%v openshift_node_group_name=\"node-config-master\"", var.master_hostname, var.domain))}
 ${join("\n", formatlist("%v.%v openshift_node_group_name=\"node-config-infra\"", var.infra_hostname, var.domain))}
 ${join("\n", formatlist("%v.%v openshift_node_group_name=\"node-config-compute\"", var.app_hostname, var.domain))}
-${var.storage["nodes"] == "0" ? "" : "${join("\n", formatlist("%v.%v openshift_schedulable=True openshift_node_group_name=\"node-config-compute\"", var.storage_hostname, var.domain))}"}
+# Remove next line to avoid listing combined worker+gluster node twice. Shouldn't happen if storage.nodes==0.
+# ${var.storage["nodes"] == "0" ? "" : "${join("\n", formatlist("%v.%v openshift_schedulable=True openshift_node_group_name=\"node-config-compute\"", var.storage_hostname, var.domain))}"}
 
 ${var.haproxy["nodes"] != "0" ? "[lb]" : ""}
 ${var.haproxy["nodes"] != "0" ? "${join("\n", formatlist("%v.%v", var.haproxy_hostname, var.domain))}" : ""}
